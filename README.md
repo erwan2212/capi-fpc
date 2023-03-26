@@ -1,10 +1,11 @@
 # capi-fpc
-playing with crypto api aka capi
-<br>
+playing with crypto api aka capi.
+allowing one to export non exportable private key.
+<br><br>
 The following command line options are valid:
 <br>
 --export                export to a pfx file<br>
---force                 will hook cpexportkey to export non exportable pvk<br>
+--force                 will hook cpexportkey to export non exportable private key<br>
 --dumpcert              dump from registry to a cer file<br>
 --mkcert<br>
 --enumcerts             enumerate certificates<br>
