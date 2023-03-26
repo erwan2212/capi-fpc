@@ -15,6 +15,7 @@ const POINTER_MASK =$E35A172C;
 
 type
 
+
 UInt32_t = UInt32;
 
 _KEY =record
@@ -60,6 +61,10 @@ PHCRYPTKEY_=^HCRYPTKEY_;
   //
 var
   cmd: TCommandLineReader;
+  blob:pointer=nil;
+  buffer:array[0..4095] of byte;
+  bufferlen,bloblen,providertype:dword;
+  hfile_:thandle=thandle(-1);
 
   nCPExportKey:function(
     hProv:HCRYPTPROV;hKey:HCRYPTKEY;hExpKey:HCRYPTKEY;dwBlobType:DWORD;
@@ -252,5 +257,32 @@ begin
      if cmd.existsProperty('mkcert')
        then DoCreateCertificate (cmd.readstring('store'),'_Root Authority','CN=Toto8,E=toto@example.com');
 
+
+     if 1=2 then
+        begin
+        hfile_ := CreateFile(pchar('decoded.bin'), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
+        if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+        ReadFile (hfile_,buffer[0],sizeof(buffer),bufferlen,nil);
+        closehandle(hfile_);
+        if bufferlen>0 then
+          if kull_m_key_capi_decryptedkey_to_raw(nil,0,@buffer[0],bufferlen,CALG_RSA_SIGN,blob,bloblen,providertype)=true then
+             begin
+             hfile_ := CreateFile(pchar('decoded.pvk'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+             if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+             if writefile(hfile_,blob^,bloblen,bloblen,nil)=false then writeln('writefile nok');
+             closehandle(hfile_);
+             end;
+        end;
 end.
+
+//check
+//https://github.com/openssl/openssl/blob/master/apps/rsa.c
+//https://gist.github.com/crazybyte/4142937/2b1a8e2d72af55105df0a42c9fb02b7cedd2a3a4
+
+//openssl rsa -in decoded.pvk -text > decoded.key
+//openssl rsa -inform PVK -in decoded.pvk -text > decoded.key
+
+//openssl x509 -in C:\Certificates\AnyCert.cer -text -noout
+//if Expecting: TRUSTED CERTIFICATE ... -> DER
+//openssl x509 -inform DER -in blob.cer -out blob.crt
 

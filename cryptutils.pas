@@ -48,6 +48,15 @@ WidePass: WideString = '';
 
 //
 type
+
+  
+_RSA_GENERICKEY_BLOB=record
+	Header:BLOBHEADER;
+	RsaKey:RSAPUBKEY; // works with RSA2 ;)
+end;
+RSA_GENERICKEY_BLOB=_RSA_GENERICKEY_BLOB;
+PRSA_GENERICKEY_BLOB=^_RSA_GENERICKEY_BLOB;
+
   NCRYPT_HANDLE = ULONG_PTR;
   NCRYPT_KEY_HANDLE = ULONG_PTR;
   PNCRYPT_KEY_HANDLE = ^NCRYPT_KEY_HANDLE;
@@ -111,6 +120,8 @@ function ExportCert(store:widestring;subject:string;sha1:string=''):boolean;
 procedure EnumCertificates(storename:string);
 function DeleteCertificate(store:widestring;subject:string;sha1:string=''):boolean;
 function DoCreateCertificate( storename,caname,cn:string):integer;
+//
+function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWORD;decrypted:LPCVOID;decryptedLen:DWORD; keyAlg:ALG_ID; var blob:PRSA_GENERICKEY_BLOB; var blobLen:DWORD; var dwProviderType:DWORD):boolean;
 
 var
   CERT_SYSTEM_STORE:dword=CERT_SYSTEM_STORE_CURRENT_USER;
@@ -1066,6 +1077,62 @@ begin
   end;
   Result := 0;
 end;
+
+  function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWORD;decrypted:LPCVOID;decryptedLen:DWORD; keyAlg:ALG_ID; var blob:PRSA_GENERICKEY_BLOB; var blobLen:DWORD; var dwProviderType:DWORD):boolean;
+  var
+       status:BOOL = FALSE;
+       keyLen:DWORD;
+       ptrDestination, ptrSource:PBYTE;
+  begin
+
+  	if pdword(decrypted)^ = $32415352 then //'2ASR'
+  	begin
+  		keyLen := dword(pointer(nativeuint(decrypted)+2*4)^); //keyLen = ((PDWORD) decrypted)[2];
+  		blobLen := sizeof(RSA_GENERICKEY_BLOB) + ((keyLen * 9) div 16);
+                blob:=allocmem(bloblen);
+                if blob<>nil then
+  		begin
+  			status := TRUE;
+                        //8 bytes
+  			blob^.Header.bType := PRIVATEKEYBLOB;
+  			blob^.Header.bVersion := CUR_BLOB_VERSION;
+  			blob^.Header.reserved := 0;
+  			blob^.Header.aiKeyAlg := keyAlg;
+                        //12 bytes
+  			blob^.RsaKey.magic := dword(decrypted^);
+  			blob^.RsaKey.bitlen := keyLen;
+  			blob^.RsaKey.pubexp := dword(pointer(nativeuint(decrypted)+4*4)^); //((PDWORD) decrypted)[4];
+
+  			ptrDestination := pointer(nativeuint(blob) + sizeof(RSA_GENERICKEY_BLOB)); //((PBYTE) (*blob)) + sizeof(RSA_GENERICKEY_BLOB);
+  			ptrSource := pointer(nativeuint(decrypted)+5);; //(PBYTE) ((PDWORD) decrypted + 5);
+
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 8);
+  			ptrDestination += keyLen div 8;
+  			ptrSource += (keyLen div 8) + 8;
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 16);
+  			ptrDestination += keyLen div 16;
+  			ptrSource += (keyLen div 16) + 4;
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 16);
+  			ptrDestination += keyLen div 16;
+  			ptrSource += (keyLen div 16) + 4;
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 16);
+  			ptrDestination += keyLen div 16;
+  			ptrSource += (keyLen div 16) + 4;
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 16);
+  			ptrDestination += keyLen div 16;
+  			ptrSource += (keyLen div 16) + 4;
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 16);
+  			ptrDestination += keyLen div 16;
+  			ptrSource += (keyLen div 16) + 4;
+  			CopyMemory(ptrDestination, ptrSource, keyLen div 8);
+
+  			dwProviderType := PROV_RSA_FULL;
+  		end;
+  	end;
+  	result:= status;
+  end;
+
+
 
 end.
 
