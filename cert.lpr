@@ -177,14 +177,14 @@ end;
 begin
 
     cmd := TCommandLineReader.create;
-    cmd.declareflag ('export','export to a pfx file');
+    cmd.declareflag ('export','export to a pfx file, use store and fitler on subject or hash');
     cmd.declareFlag ('force','will hook cpexportkey to export non exportable pvk');
-    cmd.declareflag ('dumpcert','dump from registry to a cer file');
+    cmd.declareflag ('dumpcert','dump from registry to a cer file, use store and hash');
     //cmd.declareflag ('import','');
     cmd.declareflag ('mkcert','');
-    cmd.declareflag ('enumcerts','enumerate certificates');
+    cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
-    cmd.declareflag ('delete','');
+    cmd.declareflag ('delete','use store and filter on subject or hash');
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
