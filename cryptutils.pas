@@ -57,6 +57,17 @@ end;
 RSA_GENERICKEY_BLOB=_RSA_GENERICKEY_BLOB;
 PRSA_GENERICKEY_BLOB=^_RSA_GENERICKEY_BLOB;
 
+_PVK_FILE_HDR =record
+		dwMagic:DWORD;
+		dwVersion:DWORD;
+		dwKeySpec:DWORD;
+		dwEncryptType:DWORD;
+		cbEncryptData:DWORD;
+		cbPvk:DWORD;
+end;
+PVK_FILE_HDR=_PVK_FILE_HDR;
+PPVK_FILE_HDR=^PVK_FILE_HDR;
+
   NCRYPT_HANDLE = ULONG_PTR;
   NCRYPT_KEY_HANDLE = ULONG_PTR;
   PNCRYPT_KEY_HANDLE = ^NCRYPT_KEY_HANDLE;
@@ -122,6 +133,7 @@ function DeleteCertificate(store:widestring;subject:string;sha1:string=''):boole
 function DoCreateCertificate( storename,caname,cn:string):integer;
 //
 function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWORD;decrypted:LPCVOID;decryptedLen:DWORD; keyAlg:ALG_ID; var blob:PRSA_GENERICKEY_BLOB; var blobLen:DWORD; var dwProviderType:DWORD):boolean;
+function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var szPVK:DWORD):boolean;
 
 var
   CERT_SYSTEM_STORE:dword=CERT_SYSTEM_STORE_CURRENT_USER;
@@ -1078,6 +1090,7 @@ begin
   Result := 0;
 end;
 
+  //convert a decrypted key to raw
   function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWORD;decrypted:LPCVOID;decryptedLen:DWORD; keyAlg:ALG_ID; var blob:PRSA_GENERICKEY_BLOB; var blobLen:DWORD; var dwProviderType:DWORD):boolean;
   var
        status:BOOL = FALSE;
@@ -1132,7 +1145,68 @@ end;
   	result:= status;
   end;
 
+  //convert a raw key to a pvk
+  //see kuhl_m_crypto_exportRawKeyToFile->kuhl_m_crypto_exportKeyToFile
+  function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var szPVK:DWORD):boolean;
+  const
+  PVK_FILE_VERSION_0=0;
+  PVK_MAGIC=$b0b5f11e; // bob's file
+  PVK_NO_ENCRYPT=0;
+  var
+  hCapiProv:HCRYPTPROV=0;
+  dwprovidertype:dword=PROV_RSA_FULL;
+  hCapiKey:HCRYPTKEY=0;
+  //
+  szExport:dword;
+  //szPVK:dword;
+  //pExport:pbyte=nil;
+  pExt:string;
+  pvkHeader:PVK_FILE_HDR; // = (PVK_MAGIC, PVK_FILE_VERSION_0, keySpec, PVK_NO_ENCRYPT, 0, 0);
+  //
+  hfile_:thandle=thandle(-1);
+  begin
+  result:=false;
+  pvkHeader.dwMagic :=PVK_MAGIC;
+  pvkHeader.dwVersion :=PVK_FILE_VERSION_0;
+  pvkHeader.dwKeySpec :=keySpec;
+  pvkHeader.dwEncryptType :=PVK_NO_ENCRYPT;
+  pvkHeader.cbEncryptData :=0;
+  pvkHeader.cbPvk :=0;
 
+  if CryptAcquireContextA(@hCapiProv, nil, nil, dwProviderType{/*PROV_DSS_DH/* RSA_FULL*/}, CRYPT_VERIFYCONTEXT)=true then
+  		begin
+  			if CryptImportKey(hCapiProv, pbyte( data), size, 0, CRYPT_EXPORTABLE, @hCapiKey)=false then
+  				begin
+                                //NTE_BAD_VER(0x80090007L)
+                                writeln('CryptImportKey nok:'+inttohex(getlasterror,8));
+                                exit;
+                                end;
+                        //
+                        if CryptExportKey(hCapiKey, 0, PRIVATEKEYBLOB, 0, nil, @szExport) then
+		        begin
+                        szPVK := szExport + sizeof(PVK_FILE_HDR);
+                        pExport := Allocmem(szPVK);
+                        if pexport<>nil then
+                           begin
+                           if CryptExportKey(hCapiKey, 0, PRIVATEKEYBLOB, 0, pExport + sizeof(PVK_FILE_HDR), @szExport) then
+                              begin
+                              case PBLOBHEADER(pExport + sizeof(PVK_FILE_HDR))^.aiKeyAlg of
+                              CALG_RSA_KEYX: pExt := 'keyx.rsa.pvk';
+                              CALG_RSA_SIGN: pExt := 'sign.rsa.pvk';
+                              CALG_DSS_SIGN: pExt := 'sign.dsa.pvk';
+                              else pExt :='pvk';
+                              end;
+                              result:=true;
+                              pvkHeader.cbPvk := szExport;
+        		      CopyMemory(pExport, @pvkHeader, sizeof(PVK_FILE_HDR));
+                              end; //if CryptExportKey
+                           end; //if pexport<>nil then
+                        end; //if CryptExportKey
+                        //
+                        CryptDestroyKey(hCapiKey);
+                end; //if CryptAcquireContextA
+
+  end;
 
 end.
 
