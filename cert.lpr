@@ -149,14 +149,6 @@ begin
              begin
              if WriteFile(hfile, bytes[pos], length(bytes)-pos, size, nil) then result:=true;
              CloseHandle(hfile);
-             //
-             if der_to_pem (@bytes[pos],size,pem) then
-               begin
-               hFile := CreateFile(PChar('blob.crt'), GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
-               WriteFile(hfile, pem[1], length(pem), size, nil);
-               CloseHandle(hfile);
-               end;
-             //
              end;
           end;
        end;
@@ -202,6 +194,7 @@ begin
     cmd.declareflag ('delete','use store and filter on subject or hash');
     cmd.declareflag ('rsa2pvk','convert a decrypted rsa blob to pvk');
     cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to pem');
+    cmd.declareflag ('der2pem','convert a binary cert to pem');
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
@@ -269,6 +262,23 @@ begin
      if cmd.existsProperty('mkcert')
        then DoCreateCertificate (cmd.readstring('store'),'_Root Authority','CN=Toto8,E=toto@example.com');
 
+     if cmd.existsProperty('der2pem') then
+        begin
+        hfile_ := CreateFile(pchar(cmd.readstring('filename')), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
+        if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+        ReadFile (hfile_,buffer[0],sizeof(buffer),bufferlen,nil);
+        closehandle(hfile_);
+        if bufferlen <=0 then exit;
+        //
+        if der_to_pem (@buffer[0],bufferlen,pem) then
+          begin
+          hfile_ := CreateFile(PChar(ChangeFileExt (cmd.readstring('filename'),'.crt')), GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+          if WriteFile(hfile_, pem[1], length(pem), bufferlen, nil)=true
+             then writeln('done') else writeln('failed');
+          CloseHandle(hfile_);
+          end;
+        //
+        end;
 
      if cmd.existsProperty('rsa2pvk') then
         begin
