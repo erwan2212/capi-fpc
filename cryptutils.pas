@@ -142,7 +142,7 @@ function DoCreateCertificate( storename,caname,cn:string):integer;
 function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWORD;decrypted:LPCVOID;decryptedLen:DWORD; keyAlg:ALG_ID; var blob:PRSA_GENERICKEY_BLOB; var blobLen:DWORD; var dwProviderType:DWORD):boolean;
 function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var szPVK:DWORD):boolean;
 function pvk_to_pem(data:pointer;var pem:string):boolean;
-function der_to_pem(data:pointer;var pem:string):boolean;
+function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
 
 var
   CERT_SYSTEM_STORE:dword=CERT_SYSTEM_STORE_CURRENT_USER;
@@ -1155,23 +1155,23 @@ end;
   end;
 
   //convert a DER to PEM
-  function der_to_pem(data:pointer;var pem:string):boolean;
+  function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
   const
   PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
   CRYPT_STRING_BASE64HEADER= $00000000;
   CRYPT_STRING_BASE64= $00000001;
   var
   rc:boolean;
-  dwPrivateKeyLen:dword;
+  //dwPrivateKeyLen:dword;
   //pPrivateDER:LPBYTE;
   pemPrivateSize:dword = 0;
   pPrivatePEM:LPSTR;
   begin
     result:=false;
     //* PEM */
-    rc := CryptBinaryToStringA(data, dwPrivateKeyLen, CRYPT_STRING_BASE64, nil, pemPrivateSize);
+    rc := CryptBinaryToStringA(data, size, CRYPT_STRING_BASE64HEADER, nil, pemPrivateSize);
     pPrivatePEM := Allocmem(pemPrivateSize);
-    rc := CryptBinaryToStringA(data, dwPrivateKeyLen, CRYPT_STRING_BASE64, pPrivatePEM, pemPrivateSize);
+    rc := CryptBinaryToStringA(data, size, CRYPT_STRING_BASE64HEADER, pPrivatePEM, pemPrivateSize);
     pem:=pem+strpas(pPrivatePEM);
     //
     result:=rc;
@@ -1180,9 +1180,12 @@ end;
   //convert a PVK to PEM
   function pvk_to_pem(data:pointer;var pem:string):boolean;
   const
+  X509_CERT                      = LPCSTR(1);
   PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
   CRYPT_STRING_BASE64HEADER= $00000000;
   CRYPT_STRING_BASE64= $00000001;
+  CRYPT_STRING_ANY                          = $00000007;
+  CRYPT_STRING_HEX_ANY                      = $00000008;
   var
   rc:boolean;
   dwPrivateKeyLen:dword;

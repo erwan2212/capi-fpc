@@ -150,7 +150,12 @@ begin
              if WriteFile(hfile, bytes[pos], length(bytes)-pos, size, nil) then result:=true;
              CloseHandle(hfile);
              //
-             if der_to_pem (@bytes[pos],pem) then writeln(pem);
+             if der_to_pem (@bytes[pos],size,pem) then
+               begin
+               hFile := CreateFile(PChar('blob.crt'), GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+               WriteFile(hfile, pem[1], length(pem), size, nil);
+               CloseHandle(hfile);
+               end;
              //
              end;
           end;
@@ -309,9 +314,10 @@ end.
 //https://github.com/openssl/openssl/blob/master/apps/rsa.c
 //https://gist.github.com/crazybyte/4142937/2b1a8e2d72af55105df0a42c9fb02b7cedd2a3a4
 
-//openssl rsa -in decoded.pvk -text
+//convert PVK to PEM
 //openssl rsa -inform PVK -in decoded.pvk -out decoded.key
 
+//convert DER to PEM
 //openssl x509 -in C:\Certificates\AnyCert.cer -text -noout
 //if Expecting: TRUSTED CERTIFICATE ... -> DER
 //openssl x509 -inform DER -in blob.cer -out blob.crt
