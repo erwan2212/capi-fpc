@@ -64,8 +64,9 @@ var
   blobRaw:pointer=nil;
   blob:pointer=nil;
   buffer:array[0..4095] of byte;
-  bufferlen,blobRawlen,bloblen,providertype:dword;
+  bufferlen,blobRawlen,bloblen,providertype,written:dword;
   hfile_:thandle=thandle(-1);
+  pem:string;
 
   nCPExportKey:function(
     hProv:HCRYPTPROV;hKey:HCRYPTKEY;hExpKey:HCRYPTKEY;dwBlobType:DWORD;
@@ -270,11 +271,20 @@ begin
           if kull_m_key_capi_decryptedkey_to_raw(nil,0,@buffer[0],bufferlen,CALG_RSA_KEYX,blobRaw,blobRawlen,providertype)=true then
           if raw_to_pvk (blobRaw,blobRawlen,AT_KEYEXCHANGE,blob,bloblen) then
            begin
-
+             {
              hfile_ := CreateFile(pchar('decoded.pvk'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
              if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
              if writefile(hfile_,blob^,bloblen,bloblen,nil)=false then writeln('writefile nok');
              closehandle(hfile_);
+             }
+             //
+             if pvk_to_pem (blob+sizeof(PVK_FILE_HDR ),pem) then
+                begin
+                hfile_ := CreateFile(pchar('decoded.pem'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+                if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+                if writefile(hfile_,pem[1],length(pem),written,nil)=false then writeln('writefile nok');
+                closehandle(hfile_);
+                end;
              writeln('done');
              end;
         end;

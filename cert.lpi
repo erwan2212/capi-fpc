@@ -24,7 +24,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="--mkcert --store=root"/>
+        <CommandLineParams Value="--convert2pvk --filename=decoded.bin"/>
       </local>
     </RunParams>
     <Units Count="4">

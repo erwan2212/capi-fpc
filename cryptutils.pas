@@ -124,6 +124,13 @@ function CertAddCertificateLinkToStore(hCertStore: HCERTSTORE;
   pCertContext: wcrypt2.PCCERT_CONTEXT; dwAddDisposition: DWORD;
   ppStoreContext: wcrypt2.PPCCERT_CONTEXT): BOOL; stdcall;external 'crypt32.dll';
 
+function CryptEncodeObjectEx(dwCertEncodingType: DWORD; lpszStructType: LPCSTR;
+  pvStructInfo: Pointer; dwFlags: DWORD; pEncodePara: pointer{PCRYPT_ENCODE_PARA};
+  pvEncoded: Pointer; var pcbEncoded: DWORD): BOOL; stdcall; external 'crypt32.dll';
+
+function CryptBinaryToStringA(const pBinary: PBYTE; cbBinary: DWORD;
+  dwFlags: DWORD; pszString: LPSTR; var pchString: DWORD): BOOL; stdcall;external 'crypt32.dll';
+
 //
 function enumstore():boolean;
 function ImportCert(store:widestring;filename:string;password:widestring=''):boolean;
@@ -134,6 +141,7 @@ function DoCreateCertificate( storename,caname,cn:string):integer;
 //
 function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWORD;decrypted:LPCVOID;decryptedLen:DWORD; keyAlg:ALG_ID; var blob:PRSA_GENERICKEY_BLOB; var blobLen:DWORD; var dwProviderType:DWORD):boolean;
 function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var szPVK:DWORD):boolean;
+function pvk_to_pem(data:pointer;var pem:string):boolean;
 
 var
   CERT_SYSTEM_STORE:dword=CERT_SYSTEM_STORE_CURRENT_USER;
@@ -1145,6 +1153,36 @@ end;
   	result:= status;
   end;
 
+  //convert a PVK to PEM
+  function pvk_to_pem(data:pointer;var pem:string):boolean;
+  const
+  PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
+  CRYPT_STRING_BASE64HEADER= $00000000;
+  CRYPT_STRING_BASE64= $00000001;
+  var
+  rc:boolean;
+  dwPrivateKeyLen:dword;
+  pPrivateDER:LPBYTE;
+  pemPrivateSize:dword = 0;
+  pPrivatePEM:LPSTR;
+  begin
+    result:=false;
+    //* DER */
+    rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, data, 0, nil, nil, dwPrivateKeyLen);
+    pPrivateDER := Allocmem(dwPrivateKeyLen);
+    rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, data, 0, nil, pPrivateDER, dwPrivateKeyLen);
+    if rc=false then exit;
+    //* PEM */
+    rc := CryptBinaryToStringA(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, nil, pemPrivateSize);
+    pPrivatePEM := Allocmem(pemPrivateSize);
+    rc := CryptBinaryToStringA(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, pPrivatePEM, pemPrivateSize);
+    pem:='-----BEGIN RSA PRIVATE KEY-----'+#13#10;
+    pem:=pem+strpas(pPrivatePEM);
+    pem:=pem+'-----END RSA PRIVATE KEY-----'+#13#10;
+    //
+    result:=rc;
+  end;
+
   //convert a raw key to a pvk
   //see kuhl_m_crypto_exportRawKeyToFile->kuhl_m_crypto_exportKeyToFile
   function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var szPVK:DWORD):boolean;
@@ -1152,6 +1190,9 @@ end;
   PVK_FILE_VERSION_0=0;
   PVK_MAGIC=$b0b5f11e; // bob's file
   PVK_NO_ENCRYPT=0;
+  //
+  PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
+  CRYPT_STRING_BASE64HEADER= $00000000;
   var
   hCapiProv:HCRYPTPROV=0;
   dwprovidertype:dword=PROV_RSA_FULL;
@@ -1164,6 +1205,12 @@ end;
   pvkHeader:PVK_FILE_HDR; // = (PVK_MAGIC, PVK_FILE_VERSION_0, keySpec, PVK_NO_ENCRYPT, 0, 0);
   //
   hfile_:thandle=thandle(-1);
+  //
+  rc:boolean;
+  dwPrivateKeyLen:dword;
+  pPrivateDER:LPBYTE;
+  pemPrivateSize:dword = 0;
+  pPrivatePEM:LPSTR;
   begin
   result:=false;
   pvkHeader.dwMagic :=PVK_MAGIC;
@@ -1190,12 +1237,26 @@ end;
                            begin
                            if CryptExportKey(hCapiKey, 0, PRIVATEKEYBLOB, 0, pExport + sizeof(PVK_FILE_HDR), @szExport) then
                               begin
+                              {
                               case PBLOBHEADER(pExport + sizeof(PVK_FILE_HDR))^.aiKeyAlg of
                               CALG_RSA_KEYX: pExt := 'keyx.rsa.pvk';
                               CALG_RSA_SIGN: pExt := 'sign.rsa.pvk';
                               CALG_DSS_SIGN: pExt := 'sign.dsa.pvk';
                               else pExt :='pvk';
                               end;
+                              }
+
+                              //* DER */
+                              rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, pExport + sizeof(PVK_FILE_HDR), 0, nil, nil, dwPrivateKeyLen);
+                              pPrivateDER := Allocmem(dwPrivateKeyLen);
+                              rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, pExport + sizeof(PVK_FILE_HDR), 0, nil, pPrivateDER, dwPrivateKeyLen);
+                              {
+                              //* PEM */
+                              rc := CryptBinaryToStringA(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64HEADER, nil, pemPrivateSize);
+                              pPrivatePEM := Allocmem(pemPrivateSize);
+                              rc := CryptBinaryToStringA(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64HEADER, pPrivatePEM, pemPrivateSize);
+                              writeln(pPrivatePEM );
+                              }
                               result:=true;
                               pvkHeader.cbPvk := szExport;
         		      CopyMemory(pExport, @pvkHeader, sizeof(PVK_FILE_HDR));
