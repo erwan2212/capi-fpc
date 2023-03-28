@@ -9,8 +9,9 @@
         <Filename Value="cert.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="certfpc"/>
-        <TopLine Value="271"/>
-        <CursorPos Y="291"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="273"/>
+        <CursorPos Y="275"/>
         <UsageCount Value="174"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -37,10 +38,9 @@
         <Filename Value="cryptutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CryptUtils"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1164"/>
-        <CursorPos X="49" Y="1181"/>
+        <TopLine Value="1167"/>
+        <CursorPos X="22" Y="1178"/>
         <UsageCount Value="138"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -230,7 +230,7 @@
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
         <Source Value="cert.lpr"/>
-        <Line Value="285"/>
+        <Line Value="279"/>
       </Item1>
       <Item2>
         <Kind Value="bpkSource"/>

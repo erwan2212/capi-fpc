@@ -192,7 +192,8 @@ begin
     cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
     cmd.declareflag ('delete','use store and filter on subject or hash');
-     cmd.declareflag ('convert2pvk','convert a decrypted rsa blob to pvk');
+    cmd.declareflag ('rsa2pvk','convert a decrypted rsa blob to pvk');
+    cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to pem');
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
@@ -261,7 +262,7 @@ begin
        then DoCreateCertificate (cmd.readstring('store'),'_Root Authority','CN=Toto8,E=toto@example.com');
 
 
-     if cmd.existsProperty('convert2pvk') then
+     if cmd.existsProperty('rsa2pvk') then
         begin
         hfile_ := CreateFile(pchar(cmd.readstring('filename')), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
         if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
@@ -271,23 +272,34 @@ begin
           if kull_m_key_capi_decryptedkey_to_raw(nil,0,@buffer[0],bufferlen,CALG_RSA_KEYX,blobRaw,blobRawlen,providertype)=true then
           if raw_to_pvk (blobRaw,blobRawlen,AT_KEYEXCHANGE,blob,bloblen) then
            begin
-             {
              hfile_ := CreateFile(pchar('decoded.pvk'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
              if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
              if writefile(hfile_,blob^,bloblen,bloblen,nil)=false then writeln('writefile nok');
              closehandle(hfile_);
-             }
-             //
-             if pvk_to_pem (blob+sizeof(PVK_FILE_HDR ),pem) then
-                begin
-                hfile_ := CreateFile(pchar('decoded.pem'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
-                if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
-                if writefile(hfile_,pem[1],length(pem),written,nil)=false then writeln('writefile nok');
-                closehandle(hfile_);
-                end;
              writeln('done');
              end;
         end;
+
+     if cmd.existsProperty('rsa2pem') then
+             begin
+             hfile_ := CreateFile(pchar(cmd.readstring('filename')), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
+             if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+             ReadFile (hfile_,buffer[0],sizeof(buffer),bufferlen,nil);
+             closehandle(hfile_);
+             if bufferlen>0 then
+               if kull_m_key_capi_decryptedkey_to_raw(nil,0,@buffer[0],bufferlen,CALG_RSA_KEYX,blobRaw,blobRawlen,providertype)=true then
+               if raw_to_pvk (blobRaw,blobRawlen,AT_KEYEXCHANGE,blob,bloblen) then
+                begin
+                   if pvk_to_pem (blob+sizeof(PVK_FILE_HDR ),pem) then
+                     begin
+                     hfile_ := CreateFile(pchar('decoded.pem'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+                     if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+                     if writefile(hfile_,pem[1],length(pem),written,nil)=false then writeln('writefile nok');
+                     closehandle(hfile_);
+                     end;
+                  writeln('done');
+                  end;
+             end;
 end.
 
 //check
