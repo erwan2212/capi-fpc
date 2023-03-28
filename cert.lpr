@@ -149,6 +149,9 @@ begin
              begin
              if WriteFile(hfile, bytes[pos], length(bytes)-pos, size, nil) then result:=true;
              CloseHandle(hfile);
+             //
+             if der_to_pem (@bytes[pos],pem) then writeln(pem);
+             //
              end;
           end;
        end;
