@@ -332,3 +332,10 @@ end.
 //if Expecting: TRUSTED CERTIFICATE ... -> DER
 //openssl x509 -inform DER -in blob.cer -out blob.crt
 
+//openssl x509 -modulus -noout -in blob.crt | openssl md5
+//(stdin)= 7497e3aa41dad2df6cf68a935f0ee519
+
+//openssl rsa -modulus -noout -in decoded.pem | openssl md5
+//(stdin)= e9f7c743b737ca062ed2fa6aacd1dd16
+
+
