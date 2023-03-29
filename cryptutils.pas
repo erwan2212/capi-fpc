@@ -1126,7 +1126,7 @@ end;
   			blob^.RsaKey.pubexp := dword(pointer(nativeuint(decrypted)+4*4)^); //((PDWORD) decrypted)[4];
 
   			ptrDestination := pointer(nativeuint(blob) + sizeof(RSA_GENERICKEY_BLOB)); //((PBYTE) (*blob)) + sizeof(RSA_GENERICKEY_BLOB);
-  			ptrSource := pointer(nativeuint(decrypted)+5);; //(PBYTE) ((PDWORD) decrypted + 5);
+  			ptrSource := pointer(nativeuint(decrypted)+5*4);; //(PBYTE) ((PDWORD) decrypted + 5);
 
   			CopyMemory(ptrDestination, ptrSource, keyLen div 8);
   			ptrDestination += keyLen div 8;
@@ -1198,7 +1198,7 @@ end;
     rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, data, 0, nil, nil, dwPrivateKeyLen);
     pPrivateDER := Allocmem(dwPrivateKeyLen);
     rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, data, 0, nil, pPrivateDER, dwPrivateKeyLen);
-    if rc=false then exit;
+    if rc=false then begin writeln('CryptEncodeObjectEx failed');exit;end;
     //* PEM */
     rc := CryptBinaryToStringA(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64, nil, pemPrivateSize);
     pPrivatePEM := Allocmem(pemPrivateSize);

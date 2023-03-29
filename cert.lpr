@@ -192,6 +192,7 @@ begin
     cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
     cmd.declareflag ('delete','use store and filter on subject or hash');
+    cmd.declareflag ('pvk2pem','convert a pvk to pem');
     cmd.declareflag ('rsa2pvk','convert a decrypted rsa blob to pvk');
     cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to pem');
     cmd.declareflag ('der2pem','convert a binary cert to pem');
@@ -298,6 +299,24 @@ begin
              end;
         end;
 
+     if cmd.existsProperty('pvk2pem') then
+        begin
+             hfile_ := CreateFile(pchar(cmd.readstring('filename')), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
+             if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+             ReadFile (hfile_,buffer[0],sizeof(buffer),bufferlen,nil);
+             closehandle(hfile_);
+             //writeln(bufferlen);
+             //
+             if pvk_to_pem (@buffer[0]+sizeof(PVK_FILE_HDR ),pem) then
+               begin
+               hfile_ := CreateFile(pchar('decoded.pem'), GENERIC_READ or GENERIC_WRITE , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+               if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+               if writefile(hfile_,pem[1],length(pem),written,nil)=false then writeln('writefile nok');
+               closehandle(hfile_);
+               end;
+            writeln('done');
+        end;
+
      if cmd.existsProperty('rsa2pem') then
              begin
              hfile_ := CreateFile(pchar(cmd.readstring('filename')), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
@@ -337,5 +356,7 @@ end.
 
 //openssl rsa -modulus -noout -in decoded.pem | openssl md5
 //(stdin)= e9f7c743b737ca062ed2fa6aacd1dd16
+
+//mimikatz # dpapi::capi /in:"C:\Users\erwan\AppData\Roaming\Microsoft\Crypto\RSA\S-1-5-21-2427513087-2265021005-1965656450-1001\d673096e4c9c08d6fc03c64c44117795_e65f292c-6dbf-47f8-b70f-c52e116acc05" /unprotect
 
 
