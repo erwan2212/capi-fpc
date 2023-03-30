@@ -1180,6 +1180,20 @@ end;
     rc := CryptStringToBinaryA(pPEM, pemSize,CRYPT_STRING_BASE64HEADER, pDER, @size, nil, nil);
     if rc=false then begin writeln('CryptStringToBinaryA failed');exit;end;
 
+    //* get private key blob */
+    {
+        DWORD derSize = 0;
+    	rc = CryptDecodeObjectEx(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+    		PKCS_RSA_PRIVATE_KEY, pDER, size, 0, NULL, NULL, &derSize);
+    	if (!rc) goto bad;
+
+    	LocalFree(pPrivKeyBLOB);
+    	pPrivKeyBLOB = (LPBYTE)LocalAlloc(0, derSize);
+    	rc = CryptDecodeObjectEx(X509_ASN_ENCODING | PKCS_7_ASN_ENCODING,
+    		PKCS_RSA_PRIVATE_KEY, pDER, size, 0, NULL, pPrivKeyBLOB, &derSize);
+    	if (!rc) goto bad;
+        //ready to CryptImportKey
+    }
 
   end;
 
