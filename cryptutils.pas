@@ -33,15 +33,18 @@ CERT_NAME_SIMPLE_DISPLAY_TYPE=4;
 CERT_NAME_ISSUER_FLAG=$1;
 const
 SHA1_HASH_STRING_LENGTH=40;
-CRYPT_STRING_HEXRAW=$0000000c;
-
-
 
 const
 REPORT_NO_PRIVATE_KEY                 = $0001;
 REPORT_NOT_ABLE_TO_EXPORT_PRIVATE_KEY = $0002;
 EXPORT_PRIVATE_KEYS                   = $0004;
 PKCS12_INCLUDE_EXTENDED_PROPERTIES    = $0010;
+
+CRYPT_STRING_BASE64HEADER= $00000000;
+CRYPT_STRING_BASE64= $00000001;
+CRYPT_STRING_ANY                          = $00000007;
+CRYPT_STRING_HEX_ANY                      = $00000008;
+CRYPT_STRING_HEXRAW=$0000000c;
 
 // Password to protect PFX file
 WidePass: WideString = '';
@@ -143,6 +146,7 @@ function kull_m_key_capi_decryptedkey_to_raw(publickey:LPCVOID;publickeyLen:DWOR
 function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var szPVK:DWORD):boolean;
 function pvk_to_pem(data:pointer;var pem:string):boolean;
 function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
+function pem_to_der(pPEM:pointer;pemSize:dword;var pDer:pointer;var size:dword):boolean;
 
 var
   CERT_SYSTEM_STORE:dword=CERT_SYSTEM_STORE_CURRENT_USER;
@@ -331,7 +335,6 @@ begin
   if sha1<>'' then
     begin
       sha1:=stringreplace(sha1,' ','',[rfReplaceAll, rfIgnoreCase]);
-      //sha1 := '001AA5081EDA97805B4D6A9B6730CDBEE39761C3';
       if CryptStringToBinaryA(pchar(sha1), SHA1_HASH_STRING_LENGTH,  CRYPT_STRING_HEXRAW,    nil, @dwHashDataLength, nil,nil) then
          begin
            setlength(buffer,dwHashDataLength);
@@ -352,7 +355,7 @@ begin
 
     if subject<>'' then
     begin
-    setlength(buffer,255);
+    setlength(buffer,length(subject));
     str:=subject; //'mycomputer';
     copymemory(@buffer[0],@str[1],length(str));
     pCert := CertFindCertificateInStore(pStore,
@@ -365,7 +368,7 @@ begin
 
     if pcert=nil then
      begin
-       writeln('CertFindCertificateInStore failed:'+inttostr(getlasterror));
+       writeln('CertFindCertificateInStore failed:'+inttohex(getlasterror,8));
        exit;
      end;
     //Error 0x80092004 stands for "CRYPT_E_NOT_FOUND
@@ -1154,12 +1157,36 @@ end;
   	result:= status;
   end;
 
+  //convert a PEM to DER
+  function pem_to_der(pPEM:pointer;pemSize:dword;var pDer:pointer;var size:dword):boolean;
+  const
+  MS_ENH_RSA_AES_PROV:pchar='Microsoft Enhanced RSA and AES Cryptographic Provider';
+  PROV_RSA_AES:dword = 24;
+  CRYPT_SILENT= $00000040;
+  var
+  rc:boolean;
+  hCapiProv:HCRYPTPROV=0;
+  //size:dword=0;
+  begin
+    rc := CryptAcquireContextA(@hCapiProv,nil, MS_ENH_RSA_AES_PROV, PROV_RSA_AES,
+		CRYPT_VERIFYCONTEXT or CRYPT_SILENT);
+    if rc=false then begin writeln('CryptAcquireContext failed');exit;end;
+
+    //* back to DER */
+    rc := CryptStringToBinaryA(pPEM, pemSize,CRYPT_STRING_BASE64HEADER, nil, @size, nil, nil);
+    if rc=false then begin writeln('CryptStringToBinaryA failed');exit;end;
+
+    pDER := AllocMem(size);
+    rc := CryptStringToBinaryA(pPEM, pemSize,CRYPT_STRING_BASE64HEADER, pDER, @size, nil, nil);
+    if rc=false then begin writeln('CryptStringToBinaryA failed');exit;end;
+
+
+  end;
+
   //convert a DER to PEM
   function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
   const
   PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
-  CRYPT_STRING_BASE64HEADER= $00000000;
-  CRYPT_STRING_BASE64= $00000001;
   var
   rc:boolean;
   //dwPrivateKeyLen:dword;
@@ -1182,10 +1209,6 @@ end;
   const
   X509_CERT                      = LPCSTR(1);
   PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
-  CRYPT_STRING_BASE64HEADER= $00000000;
-  CRYPT_STRING_BASE64= $00000001;
-  CRYPT_STRING_ANY                          = $00000007;
-  CRYPT_STRING_HEX_ANY                      = $00000008;
   var
   rc:boolean;
   dwPrivateKeyLen:dword;
@@ -1219,7 +1242,6 @@ end;
   PVK_NO_ENCRYPT=0;
   //
   PKCS_RSA_PRIVATE_KEY= LPCSTR(43);
-  CRYPT_STRING_BASE64HEADER= $00000000;
   var
   hCapiProv:HCRYPTPROV=0;
   dwprovidertype:dword=PROV_RSA_FULL;

@@ -183,6 +183,12 @@ end;
 
 begin
 
+    if paramcount=0 then
+       begin
+       writeln('try cert --help');
+       exit;
+       end;
+
     cmd := TCommandLineReader.create;
     cmd.declareflag ('export','export to a pfx file, use store and fitler on subject or hash');
     cmd.declareFlag ('force','will hook cpexportkey to export non exportable pvk');
@@ -194,8 +200,9 @@ begin
     cmd.declareflag ('delete','use store and filter on subject or hash');
     cmd.declareflag ('pvk2pem','convert a pvk to pem');
     cmd.declareflag ('rsa2pvk','convert a decrypted rsa blob to pvk');
-    cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to pem');
-    cmd.declareflag ('der2pem','convert a binary cert to pem');
+    cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to a base64 pem');
+    cmd.declareflag ('der2pem','convert a binary cert to base64 pem');
+    cmd.declareflag ('pem2der','convert a base64 pem to der');
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
@@ -262,6 +269,24 @@ begin
      //use cmd.readstring('subject')
      if cmd.existsProperty('mkcert')
        then DoCreateCertificate (cmd.readstring('store'),'_Root Authority','CN=Toto8,E=toto@example.com');
+
+     if cmd.existsProperty('pem2der') then
+        begin
+        hfile_ := CreateFile(pchar(cmd.readstring('filename')), GENERIC_READ , FILE_SHARE_READ or FILE_SHARE_WRITE, nil, OPEN_EXISTING , FILE_ATTRIBUTE_NORMAL, 0);
+        if hfile_=thandle(-1) then begin writeln('invalid handle',1);exit;end;
+        ReadFile (hfile_,buffer[0],sizeof(buffer),bufferlen,nil);
+        closehandle(hfile_);
+        if bufferlen <=0 then exit;
+        //
+        if pem_to_der (@buffer[0],bufferlen,blob,bloblen) then
+          begin
+          hfile_ := CreateFile(PChar(ChangeFileExt (cmd.readstring('filename'),'.der')), GENERIC_READ or GENERIC_WRITE, FILE_SHARE_READ or FILE_SHARE_WRITE, nil, CREATE_ALWAYS , FILE_ATTRIBUTE_NORMAL, 0);
+          if WriteFile(hfile_, blob^, bloblen, bufferlen, nil)=true
+             then writeln('done') else writeln('failed');
+          CloseHandle(hfile_);
+          end;
+        //
+        end;
 
      if cmd.existsProperty('der2pem') then
         begin
