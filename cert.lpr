@@ -199,11 +199,13 @@ begin
     cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
     cmd.declareflag ('delete','use store and filter on subject or hash');
-    cmd.declareflag ('pvk2pem','convert a pvk to pem');
-    cmd.declareflag ('rsa2pvk','convert a decrypted rsa blob to pvk');
+    cmd.declareflag ('pvk2pem','encode/convert a pvk to pem');
+    cmd.declareflag ('rsa2pvk','export a decrypted rsa blob/raw capi key to pvk');
     cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to a base64 pem');
     cmd.declareflag ('der2pem','convert a binary cert to base64 pem');
     cmd.declareflag ('pem2der','convert a base64 pem to der');
+    cmd.declareflag ('bin2base64','convert data to base64');
+    cmd.declareflag ('bin2hex','convert data to hexadecimal');
     cmd.declareflag ('hash','hash input');
 
     cmd.declareString('store', 'certificate store','MY');
@@ -389,6 +391,18 @@ begin
                   writeln('done');
                   end;
              end;
+
+     if cmd.existsProperty ('bin2base64') then
+        begin
+        if data='' then data:=cmd.readString ('data');
+        if bin_to_base64 (@data[1],length(data),output) then writeln(stringreplace(output,' ','',[rfReplaceAll]));
+        end;
+
+     if cmd.existsProperty ('bin2hex') then
+        begin
+        if data='' then data:=cmd.readString ('data');
+        if bin_to_hex (@data[1],length(data),output) then writeln(stringreplace(output,' ','',[rfReplaceAll]));
+        end;
 
      if cmd.existsProperty('hash') then
      begin

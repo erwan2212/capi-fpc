@@ -150,6 +150,7 @@ function pvk_to_pem(data:pointer;var pem:string):boolean;
 function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
 function pem_to_der(pPEM:pointer;pemSize:dword;var pDer:pointer;var size:dword):boolean;
 function bin_to_hex(data:pointer;size:dword;var output:string):boolean;
+function bin_to_base64(data:pointer;size:dword;var output:string):boolean;
 //
 function crypto_hash_len( hashId:ALG_ID):dword;
 function crypto_hash(algid:alg_id;data:LPCVOID;dataLen:DWORD;  hash:lpvoid;hashWanted:DWORD):boolean;
@@ -1207,6 +1208,22 @@ end;
 
   end;
 
+      //convert binary to base64
+    function bin_to_base64(data:pointer;size:dword;var output:string):boolean;
+    var
+    rc:boolean;
+    outputSize:dword=0;
+    poutput:LPSTR;
+    begin
+      result:=false;
+      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_BASE64 , nil, outputSize);
+      poutput := Allocmem(outputSize);
+      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_BASE64 , poutput, outputSize);
+      output:=strpas(poutput);
+      //
+      result:=rc;
+    end;
+
     //convert binary to hex
     function bin_to_hex(data:pointer;size:dword;var output:string):boolean;
     var
@@ -1429,18 +1446,6 @@ end;
           log('**** crypto_hash:'+BoolToStr (result)+' ****');
   end;
 
-  function crypto_hash_(algid:alg_id;data:LPCVOID;dataLen:DWORD; var output:tbytes;hashWanted:DWORD):boolean;
-  var
-    ptr_:lpvoid;
-  begin
-    //ptr_:=allocmem(hashWanted);
-    SetLength(output,hashWanted );
-    ZeroMemory(@output[0],hashWanted );
-    //result:=crypto_hash(algid,data,dataLen,ptr_,hashWanted );
-    result:=crypto_hash(algid,data,dataLen,@output[0],hashWanted );
-    //CopyMemory(@output[0],ptr_,hashWanted ) ;
-    //Freemem (ptr_ );
-  end;
 
 end.
 
