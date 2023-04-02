@@ -208,7 +208,7 @@ begin
 
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting or making');
-    cmd.declareString('cn', 'used by mkcert');
+    cmd.declareString('cn', 'used by mkcert','CN=localhost');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
     cmd.declarestring('profile', 'user or machine','user' );
     cmd.declarestring('password', 'cert password' );
@@ -294,8 +294,7 @@ begin
      if cmd.existsProperty('mkcert') then
        begin
        cn:=cmd.readstring('cn');
-       if cn='' then cn:='CN=localhost'; //'CN=Toto8,E=toto@example.com'
-       DoCreateCertificate (cmd.readstring('store'),cmd.readstring('subject'),cn);
+       DoCreateCertificate (cmd.readstring('store'),cmd.readstring('subject'),cn); //'CN=Toto8,E=toto@example.com'
        end;
 
      if cmd.existsProperty('pem2der') then
