@@ -67,7 +67,7 @@ var
   bufferlen,blobRawlen,bloblen,providertype,written,mode:dword;
   hfile_:thandle=thandle(-1);
   input_handle:thandle;
-  pem,output,data:string;
+  pem,output,data,cn:string;
 
   nCPExportKey:function(
     hProv:HCRYPTPROV;hKey:HCRYPTKEY;hExpKey:HCRYPTKEY;dwBlobType:DWORD;
@@ -195,7 +195,7 @@ begin
     cmd.declareFlag ('force','will hook cpexportkey to export non exportable pvk');
     cmd.declareflag ('dumpcert','dump from registry to a cer file, use store and hash');
     //cmd.declareflag ('import','');
-    cmd.declareflag ('mkcert','');
+    cmd.declareflag ('mkcert','make a cert, read from store/subject for issuer, and cn');
     cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
     cmd.declareflag ('delete','use store and filter on subject or hash');
@@ -207,7 +207,8 @@ begin
     cmd.declareflag ('hash','hash input');
 
     cmd.declareString('store', 'certificate store','MY');
-    cmd.declareString('subject', 'subject used when exporting or deleting');
+    cmd.declareString('subject', 'subject used when exporting or deleting or making');
+    cmd.declareString('cn', 'used by mkcert');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
     cmd.declarestring('profile', 'user or machine','user' );
     cmd.declarestring('password', 'cert password' );
@@ -289,9 +290,13 @@ begin
            then writeln('ok') else writeln('nok');
    }
 
-     //use cmd.readstring('subject')
-     if cmd.existsProperty('mkcert')
-       then DoCreateCertificate (cmd.readstring('store'),'_Root Authority','CN=Toto8,E=toto@example.com');
+
+     if cmd.existsProperty('mkcert') then
+       begin
+       cn:=cmd.readstring('cn');
+       if cn='' then cn:='CN=localhost'; //'CN=Toto8,E=toto@example.com'
+       DoCreateCertificate (cmd.readstring('store'),cmd.readstring('subject'),cn);
+       end;
 
      if cmd.existsProperty('pem2der') then
         begin

@@ -771,7 +771,7 @@ end;
 
   function EncodeAndSignCertificate( pCaContext : wcrypt2.PCCERT_CONTEXT; hCaProv : HCRYPTPROV; dwKeySpec : DWORD; szDN : LPCTSTR):Boolean;
   var
-    bStatus        : Boolean;
+    //bStatus        : Boolean;
     certInfo       : wcrypt2.CERT_INFO;
     pbEncodedName  : LPBYTE=nil;
     pbEncodedCert  : LPBYTE=nil;
@@ -799,7 +799,7 @@ end;
     pExport:pbyte=nil;
     label end_;
   begin
-     bStatus := FALSE;
+     result := FALSE;
 
      pszOID[0]:=szOID_PKIX_KP_CLIENT_AUTH;
      pszOID[1]:=szOID_PKIX_KP_EMAIL_PROTECTION;
@@ -832,7 +832,7 @@ end;
           writeln('Faile to create a new container. Error :' +inttostr(dwError));
         end;
         if  not CryptAcquireContextA(@hUserProv,
-                                 szDN,
+                                 {szDN}nil,
                                  MS_ENHANCED_PROV,
                                  PROV_RSA_FULL,
                                  0) then
@@ -865,11 +865,13 @@ end;
                           nil) then
         begin
            writeln('CertStrToName failed with error :'+ inttostr(GetLastError));
+           exit;
         end;
      end
      else
      begin
         writeln('CertStrToName failed with error :'+inttostr(GetLastError));
+        exit;
      end;
      if CryptExportPublicKeyInfoEx(hUserProv,
              AT_KEYEXCHANGE,
@@ -982,7 +984,7 @@ end;
            if hFile <> INVALID_HANDLE_VALUE then begin
               WriteFile(hFile, pbEncodedCert^, cbEncodedCert, dwWrittenBytes, nil);
               CloseHandle(hFile);
-              bStatus := TRUE;
+              result := TRUE;
            end
            else
            begin
@@ -1005,7 +1007,7 @@ end;
      if pbEncodedName=nil then FreeMem(pbEncodedName);
      if pbEncodedCert=nil then FreeMem(pbEncodedCert);
      if pbEncodedUsage=nil then FreeMem(pbEncodedUsage);
-     Result := bStatus;
+     //Result := bStatus;
   end;
 
 
@@ -1092,7 +1094,7 @@ begin
       while pCertContext<>nil do
       begin
         if CertGetNameString(pCertContext, CERT_NAME_SIMPLE_DISPLAY_TYPE, 0, nil,data, 512) <> 0
-           then Writeln('SUBJECT_CERT_NAME: ', data);
+           then ; //Writeln('SUBJECT_CERT_NAME: ', data);
          //if IsCACert(pCertContext) then break;
          if data=caname then break;
       pCertContext := CertEnumCertificatesInStore(hStoreHandle, pCertContext);
