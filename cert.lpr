@@ -64,9 +64,9 @@ var
   blobRaw:pointer=nil;
   blob:pointer=nil;
   buffer:array[0..4095] of byte;
-  bufferlen,blobRawlen,bloblen,providertype,written:dword;
+  bufferlen,blobRawlen,bloblen,providertype,written,mode:dword;
   hfile_:thandle=thandle(-1);
-  pem:string;
+  pem,output:string;
 
   nCPExportKey:function(
     hProv:HCRYPTPROV;hKey:HCRYPTKEY;hExpKey:HCRYPTKEY;dwBlobType:DWORD;
@@ -203,12 +203,16 @@ begin
     cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to a base64 pem');
     cmd.declareflag ('der2pem','convert a binary cert to base64 pem');
     cmd.declareflag ('pem2der','convert a base64 pem to der');
+    cmd.declareflag ('hash','hash input');
+
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting');
     cmd.declareString('hash', 'sha1 used when exporting or deleting');
     cmd.declarestring('profile', 'user or machine','user' );
     cmd.declarestring('password', 'cert password' );
     cmd.declarestring('filename', 'cert filename' );
+    cmd.declarestring('data', 'anything you want' );
+    cmd.declarestring('algo', 'SHA512 SHA284 SHA256 SHA1 MD5 MD4 MD2' );
 
     cmd.parse(cmdline);
 
@@ -362,6 +366,23 @@ begin
                   writeln('done');
                   end;
              end;
+
+     if cmd.existsProperty('hash') then
+     begin
+     if cmd.readstring('algo')='SHA512' then mode:=$0000800e;
+     if cmd.readstring('algo')='SHA256' then mode:=$0000800c;
+     if cmd.readstring('algo')='SHA384' then mode:=$0000800d;
+     if cmd.readstring('algo')='SHA1' then mode:=$00008004;
+     if cmd.readstring('algo')='MD5' then mode:=$00008003;
+     if cmd.readstring('algo')='MD4' then mode:=$00008002;
+     if cmd.readstring('algo')='MD2' then mode:=$00008001;
+     blob:=allocmem(crypto_hash_len(mode));
+     if crypto_hash(mode,pointer(cmd.readstring('data')),length(cmd.readstring('data')),blob,crypto_hash_len(mode)) then
+        begin
+        if bin_to_hex (blob,crypto_hash_len(mode),output) then writeln(output);
+        end
+        else writeln('failed');
+     end;
 end.
 
 //check

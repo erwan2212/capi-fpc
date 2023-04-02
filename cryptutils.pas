@@ -42,12 +42,13 @@ PKCS12_INCLUDE_EXTENDED_PROPERTIES    = $0010;
 
 CRYPT_STRING_BASE64HEADER= $00000000;
 CRYPT_STRING_BASE64= $00000001;
+CRYPT_STRING_HEX=$00000004; //Hexadecimal only format.
+CRYPT_STRING_HEXASCII=$00000005; //Hexadecimal format with ASCII character display.
 CRYPT_STRING_ANY                          = $00000007;
 CRYPT_STRING_HEX_ANY                      = $00000008;
 CRYPT_STRING_HEXRAW=$0000000c;
 
-// Password to protect PFX file
-WidePass: WideString = '';
+PROV_RSA_AES:dword = 24;
 
 //
 type
@@ -147,11 +148,20 @@ function raw_to_pvk(data:pointer;size:dword;keyspec:dword;var pExport:pbyte; var
 function pvk_to_pem(data:pointer;var pem:string):boolean;
 function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
 function pem_to_der(pPEM:pointer;pemSize:dword;var pDer:pointer;var size:dword):boolean;
+function bin_to_hex(data:pointer;size:dword;var output:string):boolean;
+//
+function crypto_hash_len( hashId:ALG_ID):dword;
+function crypto_hash(algid:alg_id;data:LPCVOID;dataLen:DWORD;  hash:lpvoid;hashWanted:DWORD):boolean;
 
 var
   CERT_SYSTEM_STORE:dword=CERT_SYSTEM_STORE_CURRENT_USER;
 
 implementation
+
+  procedure log(msg:string;status:dword=0);
+  begin
+    if status<>0 then writeln(msg);
+  end;
 
   function EnumSysCallback(pvSystemStore: Pointer; dwFlags: DWORD; pStoreInfo: PCERT_SYSTEM_STORE_INFO;
                            pvReserved: Pointer; pvArg: Pointer): BOOL; stdcall;
@@ -275,7 +285,9 @@ begin
     result:=true;
 end;
 
-  function ExportCert(store:widestring;subject:string;sha1:string=''):boolean;
+function ExportCert(store:widestring;subject:string;sha1:string=''):boolean;
+const
+  WidePass:widestring='';
 var
   pStore, pStoreTmp: HCERTSTORE;
   pCert: wcrypt2.PCCERT_CONTEXT;
@@ -1161,16 +1173,11 @@ end;
   function pem_to_der(pPEM:pointer;pemSize:dword;var pDer:pointer;var size:dword):boolean;
   const
   MS_ENH_RSA_AES_PROV:pchar='Microsoft Enhanced RSA and AES Cryptographic Provider';
-  PROV_RSA_AES:dword = 24;
   CRYPT_SILENT= $00000040;
   var
   rc:boolean;
-  hCapiProv:HCRYPTPROV=0;
-  //size:dword=0;
   begin
-    rc := CryptAcquireContextA(@hCapiProv,nil, MS_ENH_RSA_AES_PROV, PROV_RSA_AES,
-		CRYPT_VERIFYCONTEXT or CRYPT_SILENT);
-    if rc=false then begin writeln('CryptAcquireContext failed');exit;end;
+
 
     //* back to DER */
     rc := CryptStringToBinaryA(pPEM, pemSize,CRYPT_STRING_BASE64HEADER, nil, @size, nil, nil);
@@ -1196,6 +1203,22 @@ end;
     }
 
   end;
+
+    //convert binary to hex
+    function bin_to_hex(data:pointer;size:dword;var output:string):boolean;
+    var
+    rc:boolean;
+    outputSize:dword=0;
+    poutput:LPSTR;
+    begin
+      result:=false;
+      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_HEX, nil, outputSize);
+      poutput := Allocmem(outputSize);
+      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_HEX, poutput, outputSize);
+      output:=strpas(poutput);
+      //
+      result:=rc;
+    end;
 
   //convert a DER to PEM
   function der_to_pem(data:pointer;size:dword;var pem:string):boolean;
@@ -1309,11 +1332,11 @@ end;
                               end;
                               }
 
+                              {
                               //* DER */
                               rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, pExport + sizeof(PVK_FILE_HDR), 0, nil, nil, dwPrivateKeyLen);
                               pPrivateDER := Allocmem(dwPrivateKeyLen);
                               rc := CryptEncodeObjectEx(X509_ASN_ENCODING or PKCS_7_ASN_ENCODING, PKCS_RSA_PRIVATE_KEY, pExport + sizeof(PVK_FILE_HDR), 0, nil, pPrivateDER, dwPrivateKeyLen);
-                              {
                               //* PEM */
                               rc := CryptBinaryToStringA(pPrivateDER, dwPrivateKeyLen, CRYPT_STRING_BASE64HEADER, nil, pemPrivateSize);
                               pPrivatePEM := Allocmem(pemPrivateSize);
@@ -1330,6 +1353,90 @@ end;
                         CryptDestroyKey(hCapiKey);
                 end; //if CryptAcquireContextA
 
+  end;
+
+  //*********** from nthash-fpc ********************
+
+  function crypto_hash_len( hashId:ALG_ID):dword;
+var
+	 len:DWORD {$ifdef fpc}= 0{$endif fpc};
+	 hProv:HCRYPTPROV=0;
+	 hHash:HCRYPTHASH=0;
+begin
+	if CryptAcquireContext(@hProv, nil, nil, PROV_RSA_AES, CRYPT_VERIFYCONTEXT) then
+	begin
+		if CryptCreateHash(hProv, hashId, 0, 0, @hHash) then
+		begin
+			CryptGetHashParam(hHash, HP_HASHVAL, nil, @len, 0);
+			CryptDestroyHash(hHash);
+		end;
+		CryptReleaseContext(hProv, 0);
+	end;
+	result:= len;
+        log('crypto_hash_len:'+inttostr(result),0);
+end;
+
+  function crypto_hash(algid:alg_id;data:LPCVOID;dataLen:DWORD;  hash:lpvoid;hashWanted:DWORD):boolean;
+  var
+        //status:BOOL {$ifdef fpc}=FALSE{$endif fpc};
+    	hProv:HCRYPTPROV;
+    	hHash:HCRYPTHASH;
+    	hashLen:DWORD;
+    	buffer:PBYTE;
+    	//PKERB_CHECKSUM pCheckSum;
+    	//Context:PVOID;
+  begin
+  log('**** crypto_hash ****');
+    //writeln(inttohex(CALG_SHA1,4));writeln(inttohex(CALG_MD4,4));writeln(inttohex(CALG_MD5,4));
+    log('datalen:'+inttostr(datalen));
+    result:=false;
+    if CryptAcquireContext(@hProv, nil, nil, PROV_RSA_AES, CRYPT_VERIFYCONTEXT) then
+    	begin
+          log('CryptAcquireContext OK');
+    		if CryptCreateHash(hProv, algid, 0, 0, @hHash) then
+    		begin
+                  log('CryptCreateHash OK');
+    			if CryptHashData(hHash, data, dataLen, 0) then
+    			begin
+                          log('CryptHashData OK');
+    				if CryptGetHashParam(hHash, HP_HASHVAL, nil, @hashLen, 0) then
+    				begin
+                                  log('CryptGetHashParam OK:'+inttostr(hashLen));
+                                  buffer:=Pointer(LocalAlloc(LPTR, hashLen));
+    					if buffer<>nil  then
+    					begin
+                                          log('LocalAlloc OK');
+    						result := CryptGetHashParam(hHash, HP_HASHVAL, buffer, @hashLen, 0);
+                                                  log('CryptGetHashParam:'+BoolToStr(result,true));
+                                                  //RtlCopyMemory(pointer(hash), buffer, min(hashLen, hashWanted));
+                                                  log('hashLen:'+inttostr(hashLen));
+                                                  log('hashWanted:'+inttostr(hashWanted));
+                                                  //log(inttohex(hHash,sizeof(pointer)));
+                                                  CopyMemory (hash, buffer, min(hashLen, hashWanted));
+                                                  //log('HASH:'+ByteToHexaString (buffer^),1);
+                                                  //
+                                                  LocalFree(thandle(buffer));
+    					end;//if(buffer = (PBYTE) LocalAlloc(LPTR, hashLen))
+    				end; //CryptGetHashParam
+    			end; //CryptHashData
+    			CryptDestroyHash(hHash);
+    		end; //CryptCreateHash
+    		CryptReleaseContext(hProv, 0);
+          end; //CryptAcquireContext
+          log('**** crypto_hash:'+BoolToStr (result)+' ****');
+  end;
+
+  function crypto_hash_(algid:alg_id;data:LPCVOID;dataLen:DWORD; var output:tbytes;hashWanted:DWORD):boolean;
+  var
+    ptr_:lpvoid;
+  begin
+    //ptr_:=allocmem(hashWanted);
+    SetLength(output,hashWanted );
+    ZeroMemory(@output[0],hashWanted );
+    //result:=crypto_hash(algid,data,dataLen,ptr_,hashWanted );
+    result:=crypto_hash(algid,data,dataLen,@output[0],hashWanted );
+    //CopyMemory(@output[0],ptr_,hashWanted ) ;
+    //Freemem (ptr_ );
   end;
 
 end.

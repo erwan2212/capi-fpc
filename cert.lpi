@@ -24,7 +24,7 @@
     <RunParams>
       <local>
         <FormatVersion Value="1"/>
-        <CommandLineParams Value="cert --dumpcert --store=root --hash=9EC82D0810FACD26CF5DE736C4F17228DDF49BBC"/>
+        <CommandLineParams Value="--hash --algo=&quot;MD5&quot; --data=&quot;test&quot;"/>
       </local>
     </RunParams>
     <Units Count="4">
