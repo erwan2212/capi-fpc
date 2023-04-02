@@ -9,8 +9,9 @@
         <Filename Value="cert.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="certfpc"/>
-        <TopLine Value="343"/>
-        <CursorPos X="30" Y="382"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="386"/>
+        <CursorPos X="103" Y="402"/>
         <UsageCount Value="220"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -37,10 +38,9 @@
         <Filename Value="cryptutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CryptUtils"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="1177"/>
-        <CursorPos Y="1179"/>
+        <TopLine Value="1202"/>
+        <CursorPos X="66" Y="1218"/>
         <UsageCount Value="232"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -69,7 +69,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="87"/>
         <CursorPos X="6" Y="99"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="21"/>
       </Unit6>
       <Unit7>
         <Filename Value="C:\FPC\3.0.0\source\rtl\win\wininc\redef.inc"/>
@@ -84,129 +84,129 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="10"/>
         <CursorPos X="3" Y="22"/>
-        <UsageCount Value="20"/>
+        <UsageCount Value="19"/>
       </Unit8>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1374" TopLine="1357"/>
+        <Caret Line="1390" TopLine="1376"/>
       </Position1>
       <Position2>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1376" TopLine="1363"/>
+        <Caret Line="1391" TopLine="1376"/>
       </Position2>
       <Position3>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1377" TopLine="1363"/>
+        <Caret Line="1393" TopLine="1379"/>
       </Position3>
       <Position4>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1378" TopLine="1363"/>
+        <Caret Line="1394" TopLine="1379"/>
       </Position4>
       <Position5>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1380" TopLine="1363"/>
+        <Caret Line="1395" TopLine="1379"/>
       </Position5>
       <Position6>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1381" TopLine="1363"/>
+        <Caret Line="1397" TopLine="1379"/>
       </Position6>
       <Position7>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1383" TopLine="1370"/>
+        <Caret Line="1398" TopLine="1379"/>
       </Position7>
       <Position8>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1384" TopLine="1370"/>
+        <Caret Line="1400" TopLine="1380"/>
       </Position8>
       <Position9>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1386" TopLine="1370"/>
+        <Caret Line="1403" TopLine="1386"/>
       </Position9>
       <Position10>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1387" TopLine="1370"/>
+        <Caret Line="1407" TopLine="1387"/>
       </Position10>
       <Position11>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1389" TopLine="1376"/>
+        <Caret Line="1409" TopLine="1389"/>
       </Position11>
       <Position12>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1390" TopLine="1376"/>
+        <Caret Line="1213" TopLine="1198"/>
       </Position12>
       <Position13>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1391" TopLine="1376"/>
+        <Caret Line="45" Column="17" TopLine="31"/>
       </Position13>
       <Position14>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1393" TopLine="1379"/>
+        <Caret Line="46" Column="33" TopLine="34"/>
       </Position14>
       <Position15>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1394" TopLine="1379"/>
+        <Caret Line="1214" Column="12" TopLine="1203"/>
       </Position15>
       <Position16>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1395" TopLine="1379"/>
+        <Caret Line="1213" Column="24" TopLine="1204"/>
       </Position16>
       <Position17>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="1397" TopLine="1379"/>
+        <Caret Line="151" Column="71" TopLine="144"/>
       </Position17>
       <Position18>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1398" TopLine="1379"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="385" Column="48" TopLine="373"/>
       </Position18>
       <Position19>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1400" TopLine="1380"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="69" Column="13" TopLine="55"/>
       </Position19>
       <Position20>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1403" TopLine="1386"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="68" Column="22" TopLine="58"/>
       </Position20>
       <Position21>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1407" TopLine="1387"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="69" Column="24" TopLine="56"/>
       </Position21>
       <Position22>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1409" TopLine="1389"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="225" Column="45" TopLine="213"/>
       </Position22>
       <Position23>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1213" TopLine="1198"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="226" Column="14" TopLine="214"/>
       </Position23>
       <Position24>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="45" Column="17" TopLine="31"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="67" Column="12" TopLine="58"/>
       </Position24>
       <Position25>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="46" Column="33" TopLine="34"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="228" Column="58" TopLine="215"/>
       </Position25>
       <Position26>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1214" Column="12" TopLine="1203"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="227" Column="44" TopLine="215"/>
       </Position26>
       <Position27>
-        <Filename Value="cryptutils.pas"/>
-        <Caret Line="1213" Column="24" TopLine="1204"/>
+        <Filename Value="cert.lpr"/>
+        <Caret Line="232" Column="2" TopLine="386"/>
       </Position27>
       <Position28>
         <Filename Value="cryptutils.pas"/>
-        <Caret Line="151" Column="71" TopLine="144"/>
+        <Caret Line="151" Column="20" TopLine="139"/>
       </Position28>
       <Position29>
-        <Filename Value="cert.lpr"/>
-        <Caret Line="385" Column="48" TopLine="373"/>
+        <Filename Value="cryptutils.pas"/>
+        <Caret Line="1217" Column="66" TopLine="1203"/>
       </Position29>
       <Position30>
-        <Filename Value="cert.lpr"/>
-        <Caret Line="69" Column="13" TopLine="55"/>
+        <Filename Value="cryptutils.pas"/>
+        <Caret Line="1215" Column="65" TopLine="1173"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>

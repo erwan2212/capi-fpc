@@ -66,7 +66,8 @@ var
   buffer:array[0..4095] of byte;
   bufferlen,blobRawlen,bloblen,providertype,written,mode:dword;
   hfile_:thandle=thandle(-1);
-  pem,output:string;
+  input_handle:thandle;
+  pem,output,data:string;
 
   nCPExportKey:function(
     hProv:HCRYPTPROV;hKey:HCRYPTKEY;hExpKey:HCRYPTKEY;dwBlobType:DWORD;
@@ -215,6 +216,24 @@ begin
     cmd.declarestring('algo', 'SHA512 SHA284 SHA256 SHA1 MD5 MD4 MD2' );
 
     cmd.parse(cmdline);
+
+    //
+    input_handle := GetStdHandle(STD_INPUT_HANDLE);
+      if GetFileType(input_handle) <> FILE_TYPE_CHAR then
+         begin
+         ZeroMemory(@buffer[0],sizeof(buffer));
+         data:='';
+         while Readfile(input_handle,buffer[0],sizeof(buffer),bufferlen ,nil) =true do
+            begin
+            if bufferlen=0 then exit;
+            data:=data+strpas(pchar(@buffer[0]));
+            ZeroMemory(@buffer[0],sizeof(buffer));
+            end;
+         //sLineBreak
+         if pos(#13#10,data)=length(data)-1 then delete(data,pos(#13#10,data),2) ;
+         //writeln(data);
+         end;
+    //
 
     if cmd.readstring('profile')='machine' then CERT_SYSTEM_STORE:=CERT_SYSTEM_STORE_LOCAL_MACHINE;
  //
@@ -377,9 +396,10 @@ begin
      if cmd.readstring('algo')='MD4' then mode:=$00008002;
      if cmd.readstring('algo')='MD2' then mode:=$00008001;
      blob:=allocmem(crypto_hash_len(mode));
-     if crypto_hash(mode,pointer(cmd.readstring('data')),length(cmd.readstring('data')),blob,crypto_hash_len(mode)) then
+     if data='' then data:=cmd.readString ('data');
+     if crypto_hash(mode,pointer(data),length(data),blob,crypto_hash_len(mode)) then
         begin
-        if bin_to_hex (blob,crypto_hash_len(mode),output) then writeln(output);
+        if bin_to_hex (blob,crypto_hash_len(mode),output) then writeln(stringreplace(output,' ','',[rfReplaceAll]));
         end
         else writeln('failed');
      end;

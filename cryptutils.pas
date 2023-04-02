@@ -47,6 +47,7 @@ CRYPT_STRING_HEXASCII=$00000005; //Hexadecimal format with ASCII character displ
 CRYPT_STRING_ANY                          = $00000007;
 CRYPT_STRING_HEX_ANY                      = $00000008;
 CRYPT_STRING_HEXRAW=$0000000c;
+CRYPT_STRING_NOCRLF=$40000000;
 
 PROV_RSA_AES:dword = 24;
 
@@ -1212,9 +1213,9 @@ end;
     poutput:LPSTR;
     begin
       result:=false;
-      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_HEX, nil, outputSize);
+      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_HEX or CRYPT_STRING_NOCRLF , nil, outputSize);
       poutput := Allocmem(outputSize);
-      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_HEX, poutput, outputSize);
+      rc := CryptBinaryToStringA(data, size, CRYPT_STRING_HEX or CRYPT_STRING_NOCRLF , poutput, outputSize);
       output:=strpas(poutput);
       //
       result:=rc;
