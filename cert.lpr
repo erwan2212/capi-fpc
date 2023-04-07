@@ -194,7 +194,7 @@ begin
     cmd.declareflag ('export','export to a pfx file, use store and fitler on subject or hash');
     cmd.declareFlag ('force','will hook cpexportkey to export non exportable pvk');
     cmd.declareflag ('dumpcert','dump from registry to a cer file, use store and hash');
-    //cmd.declareflag ('import','');
+    cmd.declareflag ('import','import a cert from filename to store');
     cmd.declareflag ('mkcert','make a cert, read from store/subject for issuer, and cn');
     cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
@@ -286,11 +286,11 @@ begin
    if (cmd.existsProperty('delete')) and (cmd.existsProperty('hash'))
      then if DeleteCertificate(widestring(cmd.readstring('store')),'',cmd.readstring('hash'))=true
           then writeln('ok') else writeln('nok');
-   {
+
    if cmd.existsProperty('import')
       then if ImportCert(widestring(cmd.readstring('store')),cmd.readstring('filename'),widestring(cmd.readstring('password')))=true
            then writeln('ok') else writeln('nok');
-   }
+
 
 
      if cmd.existsProperty('mkcert') then

@@ -196,7 +196,7 @@ var
    //
    blob:CRYPT_DATA_BLOB;
    pStore:hcertstore=nil; //thandle(-1);
-   myStore:hcertstore=nil; //thandle(-1);
+   myStore:hcertstore=nil;
    pCert: wcrypt2.PCCERT_CONTEXT=nil;
    bResult:BOOL;
    bFreeHandle:BOOL;
@@ -238,8 +238,8 @@ begin
         exit;
       end
       else writeln('CertFindCertificateInStore ok');
-    //check CertAddCertificateContextToStore or CertAddEncodedCertificateToStore ?
-    {
+
+
     myStore := CertOpenStore(
            CERT_STORE_PROV_SYSTEM,
            0,                      // Encoding type not needed
@@ -251,24 +251,28 @@ begin
            pchar(store));                 // Could have used other predefined
                                    // system stores
                                    // including Trust, CA, or Root.
-    if mystore=thandle(-1) then
+    if mystore=nil then
       begin
         writeln('CertOpenStore failed');
         exit;
       end;
-    if CertAddCertificateContextToStore(myStore, pcert, CERT_STORE_ADD_REPLACE_EXISTING, 0)=true then
+    //check CertAddCertificateContextToStore or CertAddEncodedCertificateToStore ?
+    if CertAddCertificateContextToStore(myStore, pcert, CERT_STORE_ADD_REPLACE_EXISTING, nil)=false then
       begin
-        writeln('CertAddCertificateContextToStore failed');
+        writeln('CertAddCertificateContextToStore failed:'+inttohex(getlasterror,8));
+        //0x80092005 : The symbol CRYPT_E_EXISTS means "The object or property already exists.".
         exit;
       end;
-    }
+
     //
+    {
      if CryptAcquireCertificatePrivateKey(wcrypt2.PCCERT_CONTEXT(pcert), 0, nil, hProv, @dwKeySpec, @bFreeHandle)=false then
       begin
         writeln('CryptAcquireCertificatePrivateKey failed');
         exit;
       end
       else writeln('CryptAcquireCertificatePrivateKey ok');
+     }
     //
     //at this point we are ready to sign with CryptSignMessage or encrypt with ...
     //or use CryptExportKey

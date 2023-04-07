@@ -5570,7 +5570,7 @@ function CertAddEncodedCertificateToStore(hCertStore :HCERTSTORE;
 function CertAddCertificateContextToStore(hCertStore :HCERTSTORE;
                                           pCertContext :PCCERT_CONTEXT;
                                           dwAddDisposition :DWORD;
-                                      var ppStoreContext :PCCERT_CONTEXT //OPTIONAL
+                                          ppStoreContext :PPCCERT_CONTEXT //OPTIONAL
                                           ):BOOL ; stdcall;
 
 //+-------------------------------------------------------------------------
