@@ -206,7 +206,7 @@ begin
     cmd.declareflag ('pem2der','convert a base64 pem to der');
     cmd.declareflag ('bin2base64','convert data to base64');
     cmd.declareflag ('bin2hex','convert data to hexadecimal');
-    cmd.declareflag ('hash','hash input');
+    cmd.declareflag ('hash','hash data');
 
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting or making');

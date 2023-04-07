@@ -9,8 +9,9 @@
         <Filename Value="cert.lpr"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="certfpc"/>
-        <TopLine Value="279"/>
-        <CursorPos X="37" Y="291"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="207"/>
+        <CursorPos X="39" Y="209"/>
         <UsageCount Value="220"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
@@ -37,10 +38,9 @@
         <Filename Value="cryptutils.pas"/>
         <IsPartOfProject Value="True"/>
         <UnitName Value="CryptUtils"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="251"/>
-        <CursorPos X="83" Y="262"/>
+        <TopLine Value="227"/>
+        <CursorPos X="18" Y="243"/>
         <UsageCount Value="232"/>
         <Loaded Value="True"/>
         <DefaultSyntaxHighlighter Value="Delphi"/>
