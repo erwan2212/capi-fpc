@@ -211,7 +211,7 @@ begin
     cmd.declareString('store', 'certificate store','MY');
     cmd.declareString('subject', 'subject used when exporting or deleting or making');
     cmd.declareString('cn', 'used by mkcert','CN=localhost');
-    cmd.declareString('hash', 'sha1 used when exporting or deleting');
+    cmd.declareString('sha1', 'sha1 used when exporting or deleting');
     cmd.declarestring('profile', 'user or machine','user' );
     cmd.declarestring('password', 'cert password' );
     cmd.declarestring('filename', 'cert filename' );
@@ -406,6 +406,8 @@ begin
 
      if cmd.existsProperty('hash') then
      begin
+     mode:=0;
+     //writeln(cmd.readstring('algo'));
      if cmd.readstring('algo')='SHA512' then mode:=$0000800e;
      if cmd.readstring('algo')='SHA256' then mode:=$0000800c;
      if cmd.readstring('algo')='SHA384' then mode:=$0000800d;
@@ -413,6 +415,7 @@ begin
      if cmd.readstring('algo')='MD5' then mode:=$00008003;
      if cmd.readstring('algo')='MD4' then mode:=$00008002;
      if cmd.readstring('algo')='MD2' then mode:=$00008001;
+     //if mode=0 then mode:=$00008003;
      blob:=allocmem(crypto_hash_len(mode));
      if data='' then data:=cmd.readString ('data');
      if crypto_hash(mode,pointer(data),length(data),blob,crypto_hash_len(mode)) then

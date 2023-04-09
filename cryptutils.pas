@@ -1395,7 +1395,7 @@ begin
 			CryptDestroyHash(hHash);
 		end;
 		CryptReleaseContext(hProv, 0);
-	end;
+	end ;
 	result:= len;
         log('crypto_hash_len:'+inttostr(result),0);
 end;
