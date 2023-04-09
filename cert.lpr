@@ -264,7 +264,7 @@ begin
          then writeln('ok') else writeln('nok');
     end;
 
-  if (cmd.existsProperty('export')) and (cmd.existsProperty('hash'))
+  if (cmd.existsProperty('export')) and (cmd.existsProperty('sha1'))
     then
     begin
        if cmd.existsProperty('force') then
@@ -283,7 +283,7 @@ begin
      then if DeleteCertificate(widestring(cmd.readstring('store')),cmd.readstring('subject'))=true
           then writeln('ok') else writeln('nok');
 
-   if (cmd.existsProperty('delete')) and (cmd.existsProperty('hash'))
+   if (cmd.existsProperty('delete')) and (cmd.existsProperty('sha1'))
      then if DeleteCertificate(widestring(cmd.readstring('store')),'',cmd.readstring('hash'))=true
           then writeln('ok') else writeln('nok');
 
