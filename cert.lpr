@@ -191,14 +191,14 @@ begin
        end;
 
     cmd := TCommandLineReader.create;
-    cmd.declareflag ('export','export to a pfx file, use store and fitler on subject or hash');
+    cmd.declareflag ('export','export to a pfx file, use store and fitler on subject or sha1');
     cmd.declareFlag ('force','will hook cpexportkey to export non exportable pvk');
-    cmd.declareflag ('dumpcert','dump from registry to a cer file, use store and hash');
+    cmd.declareflag ('dumpcert','dump from registry to a cer file, use store and sha1');
     cmd.declareflag ('import','import a cert from filename to store');
     cmd.declareflag ('mkcert','make a cert, read from store/subject for issuer, and cn');
     cmd.declareflag ('enumcerts','enumerate certificates in a store');
     cmd.declareflag ('enumstores','enumerate stores');
-    cmd.declareflag ('delete','use store and filter on subject or hash');
+    cmd.declareflag ('delete','use store and filter on subject or sha1');
     cmd.declareflag ('pvk2pem','encode/convert a pvk to pem');
     cmd.declareflag ('rsa2pvk','export a decrypted rsa blob/raw capi key to pvk');
     cmd.declareflag ('rsa2pem','convert a decrypted rsa blob to a base64 pem');
@@ -248,7 +248,7 @@ begin
 
  if cmd.existsProperty('dumpcert') then
  begin
-    if saveblob(HKEY_CURRENT_USER ,'software\microsoft\systemcertificates\'+cmd.readstring('store')+'\certificates\'+cmd.readstring('hash'))=true
+    if saveblob(HKEY_CURRENT_USER ,'software\microsoft\systemcertificates\'+cmd.readstring('store')+'\certificates\'+cmd.readstring('sha1'))=true
        then writeln('ok') else writeln('not ok');
  end;
 
@@ -272,7 +272,7 @@ begin
           LoadLibrary ('rsaenh.dll'); //or else intercept may/will fail
           @nCPExportKey    :=ddetours.InterceptCreate(GetProcAddress(GetModuleHandle('rsaenh.dll'), 'CPExportKey') , @myCPExportKey);
           end;
-       if ExportCert(widestring(cmd.readstring('store')),'',cmd.readstring('hash'))=true
+       if ExportCert(widestring(cmd.readstring('store')),'',cmd.readstring('sha1'))=true
          then writeln('ok') else writeln('nok');
     end;
 
@@ -284,7 +284,7 @@ begin
           then writeln('ok') else writeln('nok');
 
    if (cmd.existsProperty('delete')) and (cmd.existsProperty('sha1'))
-     then if DeleteCertificate(widestring(cmd.readstring('store')),'',cmd.readstring('hash'))=true
+     then if DeleteCertificate(widestring(cmd.readstring('store')),'',cmd.readstring('sha1'))=true
           then writeln('ok') else writeln('nok');
 
    if cmd.existsProperty('import')
