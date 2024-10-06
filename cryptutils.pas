@@ -561,7 +561,8 @@ end;
                //see JwaNCrypt.pas
                try
                NCryptOpenStorageProvider(@hProvider,pwszProvName,0);
-               NCryptOpenKey(hProvider ,@hkey,pwszContainerName,0,0);
+               //NCRYPT_SILENT_FLAG 0x00000040
+               NCryptOpenKey(hProvider ,@hkey,pwszContainerName,0,$00000040);
                NCryptGetProperty(hKey,lpcwstr('Unique Name'),nil,0,@cbResult,0);
                setlength(pboutput,cbresult);
                NCryptGetProperty(hKey,lpcwstr('Unique Name'),@pbOutput[0],cbresult,@cbResult,0);
